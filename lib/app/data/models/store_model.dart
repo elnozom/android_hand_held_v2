@@ -5,14 +5,14 @@ class Store {
   Store({required this.storeCode, required this.storeName});
 
   Store.fromJson(Map<String, dynamic> json) {
-    storeCode = json['StoreCode'];
-    storeName = json['StoreName'];
+    storeCode = json['store_code'];
+    storeName = json['store_name'];
   }
 
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
-    data['StoreCode'] = storeCode;
-    data['StoreName'] = storeName;
+    data['store_code'] = storeCode;
+    data['store_name'] = storeName;
     return data;
   }
 }

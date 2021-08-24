@@ -22,3 +22,12 @@ dev_dependencies:
 flutter: 
   uses-material-design: true
 
+  assets:
+    - assets/images/home-bg.png
+    - assets/images/logo.png
+
+  fonts:
+    - family: Frutiger
+      fonts:
+        - asset: assets/fonts/Frutiger.ttf
+
