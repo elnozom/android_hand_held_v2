@@ -7,7 +7,6 @@ import 'package:get/get.dart';
 import '../controllers/prepare_controller.dart';
 
 class PrepareView extends GetView<PrepareController> {
-  
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -17,6 +16,7 @@ class PrepareView extends GetView<PrepareController> {
           return true;
         },
         child: Scaffold(
+          key: controller.key,
             body: defaultWid(context , controller)
         ));
   }
@@ -173,7 +173,8 @@ Widget insert(context, controller) {
                         style: TextStyle(color: Colors.white),
                       ),
                       onPressed: () {
-                        controller.submit(context);
+                        controller.msgsTimer.cancel();
+                        // controller.submit(context);
                       },
                     ),
                   ),

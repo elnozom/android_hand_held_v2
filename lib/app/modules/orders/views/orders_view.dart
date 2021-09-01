@@ -1,10 +1,9 @@
-
 import 'package:elnozom_pda/app/controllers/global_controller.dart';
 import 'package:elnozom_pda/app/data/models/item_model.dart';
 import 'package:elnozom_pda/app/data/models/order_item_model.dart';
+import 'package:elnozom_pda/widgets/ProductsSearch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-
 import 'package:get/get.dart';
 import 'package:simple_autocomplete_formfield/simple_autocomplete_formfield.dart';
 
@@ -45,7 +44,7 @@ class OrdersView extends GetView<OrdersController> {
                   )),
               body: TabBarView(children: [
                 insert(context, controller),
-                 Obx(() {
+                Obx(() {
                   // return Text(controller.itemNotFound.value.toString());
                   if (controller.items.value.first.serial == -1) {
                     return Center(child: Text("الا يوجد اصناف"));
@@ -53,7 +52,6 @@ class OrdersView extends GetView<OrdersController> {
                     return viewItemsTable(controller.itemsList, controller);
                   }
                 }),
-                
               ])),
         )));
   }
@@ -61,19 +59,19 @@ class OrdersView extends GetView<OrdersController> {
 
 Widget viewItemsTable(List<OrderItem> items, controller) {
   return SingleChildScrollView(
-          child: Column(
-            children: [
-              DataTable(
-                columns: GlobalController().generateColumns(controller.columns),
-                dataRowHeight: 110,
-                rows: <DataRow>[
-                  for (var i = 0; i < items.length; i++)
-                    controller.generateRows(items[i]),
-                ],
-              ),
-            ],
-          ),
-        );
+    child: Column(
+      children: [
+        DataTable(
+          columns: GlobalController().generateColumns(controller.columns),
+          dataRowHeight: 110,
+          rows: <DataRow>[
+            for (var i = 0; i < items.length; i++)
+              controller.generateRows(items[i]),
+          ],
+        ),
+      ],
+    ),
+  );
 }
 
 Widget insert(context, controller) {
@@ -86,35 +84,7 @@ Widget insert(context, controller) {
               key: controller.formKey,
               autovalidateMode: AutovalidateMode.disabled,
               child: Column(children: <Widget>[
-                SimpleAutocompleteFormField<Item>(
-                  maxSuggestions: 20,
-                  controller: controller.itemController,
-                  focusNode: controller.itemFocus,
-                  suggestionsHeight: 100,
-                  decoration: InputDecoration(labelText: 'ابحث عن المنتج'),
-                  itemBuilder: (context, item) => Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('${item!.itemName}',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                        ]),
-                  ),
-                  onSearch: (search) async => controller.searchItems(search),
-                  itemToString: (item) {
-                    return item == null ? "" : item.itemName;
-                  },
-                  itemFromString: (string) {
-                    final matches = GlobalController().itemSuggestions.where(
-                        (item) =>
-                            item.itemName.toLowerCase() ==
-                            string.toLowerCase());
-                    return matches.isEmpty ? null : matches.first;
-                  },
-                  autofocus: true,
-                  onChanged: (item) => { controller.itemAutocompleteSaved(context , item) },
-                ),
+                getProductsSearch(context , controller),
                 Row(children: [
                   Expanded(
                     child: FormBuilderTextField(
@@ -132,10 +102,10 @@ Widget insert(context, controller) {
                       keyboardType: TextInputType.number,
                     ),
                   ),
-                  SizedBox(width:10),
+                  SizedBox(width: 10),
                   Obx(() {
                     if (controller.qntHidden.value == false) {
-                      return  Expanded(
+                      return Expanded(
                         child: FormBuilderTextField(
                           name: 'qnt',
                           focusNode: controller.qntFocus,
@@ -165,7 +135,8 @@ Widget insert(context, controller) {
                   }
                 }),
                 Obx(() {
-                  if (controller.withExp.value == true && controller.expExisted.value == false) {
+                  if (controller.withExp.value == true &&
+                      controller.expExisted.value == false) {
                     return Row(children: [
                       Expanded(
                         child: FormBuilderTextField(

@@ -17,7 +17,7 @@ class OrdersProvider extends GetConnect {
   Future<String> insertOrderItem(Map data) async {
     config = await GlobalController().getConfigCache();
     final response = await post('${config.server}orders/item', data);
-    return response.body;
+    return "response.body";
   }
 
   Future<List<OrderItem>> getOrderItems(int serial) async {

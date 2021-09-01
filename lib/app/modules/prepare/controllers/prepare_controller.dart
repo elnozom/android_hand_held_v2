@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:elnozom_pda/app/controllers/global_controller.dart';
 import 'package:elnozom_pda/app/data/doc_provider.dart';
-import 'package:elnozom_pda/app/data/models/doc_item_model.dart';
 import 'package:elnozom_pda/app/data/models/insert_prepare_item_response_model.dart';
 import 'package:elnozom_pda/app/data/models/item_model.dart';
 import 'package:elnozom_pda/app/data/models/prepare_config_model.dart';
@@ -11,9 +12,9 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
 
 class PrepareController extends GetxController {
-
+  final GlobalKey<NavigatorState> key = new GlobalKey<NavigatorState>();
   PrepareConfig config = Get.arguments;
- // inputs controllers
+  // inputs controllers
   final codeController = TextEditingController();
   final monthController = TextEditingController();
   final yearController = TextEditingController();
@@ -24,34 +25,31 @@ class PrepareController extends GetxController {
   final FocusNode yearFocus = FocusNode();
 
   Rx<bool> itemNotFound = false.obs;
-
-
-
-
-  Item emptyItem =  Item(
-    serial : 0,
-    itemName : "0",
-    minorPerMajor : 0,
-    pOSPP : 0,
-    pOSTP : 0,
-    byWeight : false,
-    withExp : false,
-    itemHasAntherUnit : false,
-    avrWait : 0,
-    expirey : "0",
+  // Timer? msgsTimer ;
+  Item emptyItem = Item(
+    serial: 0,
+    itemName: "0",
+    minorPerMajor: 0,
+    pOSPP: 0,
+    pOSTP: 0,
+    byWeight: false,
+    withExp: false,
+    itemHasAntherUnit: false,
+    avrWait: 0,
+    expirey: "0",
   );
   //this is the item from the serve
   Rx<Item> itemData = Item(
-    serial : 0,
-    itemName : "0",
-    minorPerMajor : 0,
-    pOSPP : 0,
-    pOSTP : 0,
-    byWeight : false,
-    withExp : false,
-    itemHasAntherUnit : false,
-    avrWait : 0,
-    expirey : "0",
+    serial: 0,
+    itemName: "0",
+    minorPerMajor: 0,
+    pOSPP: 0,
+    pOSTP: 0,
+    byWeight: false,
+    withExp: false,
+    itemHasAntherUnit: false,
+    avrWait: 0,
+    expirey: "0",
   ).obs;
 
   final formKey = GlobalKey<FormBuilderState>();
@@ -60,40 +58,40 @@ class PrepareController extends GetxController {
     "السعر",
   ];
 
+  bool msgsDialog = false;
+
   RxList<PrepareItem> items = PrepareItem.from(Get.arguments.invoice);
   get itemsList => items;
   double prepQnt = 0;
 
   /// Only relevant for SimplePage at bottom
   void closeDoc() async {
+    // msgsTimer!.cancel();
     final Map req = {
       "HSerial": config.hSerial,
       "EmpCode": config.empCode,
     };
-    
+
     // print(req);
     var resp = await DocProvider().closePrepareDoc(req).then((value) {
       print(value == false);
-      if(value == false){
+      if (value == false) {
         Get.offAllNamed('/home');
         Get.snackbar(
-            "تحذير",
-            "عملية التحضير لم تكتمل و قد تم تعليق المستند",
-          );
+          "تحذير",
+          "عملية التحضير لم تكتمل و قد تم تعليق المستند",
+        );
       } else {
         Get.offAllNamed('/home');
       }
     });
-
-   
   }
-
 
   List<bool> itemInInv(rec) {
     bool found = false;
     bool prepared = false;
     int serial = rec.serial;
-    
+
     for (var item in items.value) {
       int itemSerial = int.parse(item.itemSerial);
       if (itemSerial == serial) {
@@ -101,7 +99,7 @@ class PrepareController extends GetxController {
         found = true;
         itemData.value = rec;
         itemNotFound.value = false;
-        if(!prepared){
+        if (!prepared) {
           int minor = item.minorPerMajor;
           int qnt = item.qnt;
           // check if the qny is lt minor that means we need to load onluy part
@@ -114,33 +112,32 @@ class PrepareController extends GetxController {
     return [found, prepared];
   }
 
-  void itemSubmitted(InsertPrepareItemResp response){
+  void itemSubmitted(InsertPrepareItemResp response) {
     int serial = itemData.value.serial;
     for (var item in items.value) {
       int itemSerial = int.parse(item.itemSerial);
       if (itemSerial == serial) {
         item.isPrepared = response.prepared;
-        item.qntPrepare = response.qntPrepared; 
+        item.qntPrepare = response.qntPrepared;
         break;
       }
     }
   }
 
-
-  void itemBcodeReset(context){
+  void itemBcodeReset(context) {
     codeController.text = "";
     itemNotFound.value = true;
     itemData.value = emptyItem;
-    print("Asdasd");
     // FocusScope.of(context).requestFocus(itemFocus);
-
   }
+
   void itemBCodeSubmitted(context, data) {
     final Map req = {"BCode": data.toString()};
     if(!GlobalController.isNumber(data)){
       itemBcodeReset(context);
       return;
     }
+   
     DocProvider().getItem(req).then((resp) {
       // now we check if we gor response
       if (resp == null) {
@@ -148,9 +145,9 @@ class PrepareController extends GetxController {
 
         return ;
       }
-     
+
       //if we come here that means we have got the item from the server successfully
-       //check if the item is in the invoice 
+       //check if the item is in the invoice
       if(!itemInInv(resp)[0]){
         itemBcodeReset(context);
         return;
@@ -164,7 +161,7 @@ class PrepareController extends GetxController {
         reset(context);
         return;
       }
-      
+
       // fill the data inputs from the server if we got the data from the server
       if (itemData.value.withExp == true ) {
         if(itemData.value.expirey != '0'){
@@ -172,7 +169,7 @@ class PrepareController extends GetxController {
           yearController.text = resp.expirey.substring(2);
           submit(context);
         } else {
-          
+
           // FocusScope.of(context).requestFocus(monthFocus);
         }
       } else {
@@ -181,50 +178,50 @@ class PrepareController extends GetxController {
       }
     } , onError: (err) {
       print(err);
-      print("err");
     });
     return ;
   }
 
-  
   void submit(context) async {
     formKey.currentState!.save();
     if (!formKey.currentState!.validate()) {
-      return ;
+      return;
     }
     //check if item data is not set
     if (itemData.value == emptyItem) {
        itemBCodeSubmitted(context, codeController.text);
+       return;
+    } else {
+      insertItem(context);
     }
-    
 
-    Map req = {
+    loadMsgs(context);
+  }
+  void insertItem(context){
+      Map req = {
         "QPrep": prepQnt,
         "ISerial": itemData.value.serial,
         "HSerial": config.hSerial,
-        "EmpCode" : config.empCode
+        "EmpCode": config.empCode
       };
-      print(req);
       DocProvider().insertPrepareItem(req).then((resp) {
         if (resp != null) {
           itemSubmitted(resp);
           reset(context);
         }
-      }); 
+      });
   }
 
-
-  void reset(context){
-      itemData.value = emptyItem;
-      codeController.clear();
-      monthController.clear();
-      yearController.clear();
-      itemFocus.unfocus();
-      monthFocus.unfocus();
-      yearFocus.unfocus();
-      FocusScope.of(context).requestFocus(itemFocus);
+  void reset(context) {
+    itemData.value = emptyItem;
+    codeController.clear();
+    monthController.clear();
+    yearController.clear();
+    itemFocus.unfocus();
+    monthFocus.unfocus();
+    yearFocus.unfocus();
+    FocusScope.of(context).requestFocus(itemFocus);
   }
-  
 
   Future<void> showBackAlertDialog(context) async {
     return showDialog<void>(
@@ -250,7 +247,7 @@ class PrepareController extends GetxController {
             TextButton(
               child: const Text('الغاء'),
               onPressed: () {
-                 Navigator.of(context).pop();
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -275,9 +272,79 @@ class PrepareController extends GetxController {
       cells: wid,
     );
   }
+
+  void showMsgsDialog(context, List<dynamic> msgs) async {
+    if(msgs == null){
+      msgsDialog = false;
+      return;
+    } else {
+      msgsDialog = true;
+      return showDialog<void>(
+        context: context,
+        barrierDismissible: false, // user must tap button!
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text(' قد تلقيت رسالة من متلقي الطلب '),
+            content: SingleChildScrollView(
+              child: ListBody(children: msgs.map((msg) => Text(msg)).toList()),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('خروج'),
+                onPressed: () {
+                  msgsDialog = false;
+                  readMsgs(context);
+                  Get.offAllNamed('/home');
+                },
+              ),
+              TextButton(
+                child: const Text('الغاء'),
+                onPressed: () {
+                  readMsgs(context);
+                  msgsDialog = false;
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
+
+    }
+  }
+
+  void loadMsgs(context){
+    Map data = {
+        "EmpSerial": config.empCode,
+        "BonSerial": config.invoice[0].bonSer
+      };
+      DocProvider().getMsgs(data).then((value) {
+        if(value != null && !msgsDialog){
+          showMsgsDialog(context , value);
+        }
+      });
+  }
+  void readMsgs(context){
+    Map data = {
+        "EmpSerial": config.empCode,
+        "BonSerial": config.invoice[0].bonSer
+      };
+      DocProvider().readMsgs(data);
+  }
+  void getMsgs(context) {
+    print('getMsgs');
+    
+      loadMsgs(context);
+    // msgsTimer = Timer.periodic(new Duration(minutes: 1), (timer) {
+    //   print('getMsgs');
+    // });
+  }
+
   @override
   void onInit() {
     super.onInit();
+      getMsgs(key.currentContext);
+
+    
   }
 
   @override
@@ -286,6 +353,7 @@ class PrepareController extends GetxController {
   }
 
   @override
-  void onClose() {}
-
+  void onClose() {
+    // msgsTimer!.cancel();
+  }
 }

@@ -19,6 +19,10 @@ class GlobalController extends GetxController {
   bool noAccsFound = false;
   bool noItemsFound = false;
 
+  // search
+  String? lastItemSearchChar;
+
+
 // load the meta from cache
   Future<ConfigCache> getConfigCache() async {
     final prefs = await SharedPreferences.getInstance();
@@ -100,6 +104,30 @@ class GlobalController extends GetxController {
     ];
 
     return bCodeValidatores;
+  }
+
+  Future<List<Item?>> searchItems(String search) async {
+    // check if use just added the first char to search
+    // check if this char is not the last char we searched for
+    // so now we know that the input has only one char and this char is not our last one
+    // so now we need to call the server to load all account have this letter
+    if (search.length == 1 && search != lastItemSearchChar) {
+      lastItemSearchChar = search;
+      itemSuggestions =
+          await GlobalController().loadProductsAutcomplete(search);
+
+      // check if we already loaded the accounts from the server so we search
+      // here we make a clone of our suggestions to not corrubt the original one
+      // so if the user deleted the letter and start typing again everthing will work well
+    } else {
+      List<Item> filteredItemSuggestions = itemSuggestions.where((item) {
+        return item.itemName.toLowerCase().contains(search.toLowerCase());
+      }).toList();
+
+      // print(filteredItemSuggestions);
+      return filteredItemSuggestions;
+    }
+    return itemSuggestions;
   }
 
   List<String? Function(String?)> loadDeviceValidators(context) {

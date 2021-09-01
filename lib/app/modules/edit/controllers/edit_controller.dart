@@ -1,3 +1,4 @@
+import 'package:elnozom_pda/app/controllers/global_controller.dart';
 import 'package:elnozom_pda/app/data/doc_provider.dart';
 import 'package:elnozom_pda/app/data/models/config_model.dart';
 import 'package:elnozom_pda/app/data/models/doc_item_model.dart';
@@ -8,6 +9,9 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
 
 class EditController extends GetxController{
+  //search 
+  final itemController = TextEditingController();
+  final FocusNode itemFocus = FocusNode();
   // inputs controllers
   final codeController = TextEditingController();
   final wholeQntController = TextEditingController();
@@ -16,7 +20,7 @@ class EditController extends GetxController{
   final yearController = TextEditingController();
 
   // inputs focus nodes
-  final FocusNode itemFocus = FocusNode();
+  final FocusNode itemCodeFocus = FocusNode();
   final FocusNode qntFocus = FocusNode();
   final FocusNode wholeQntFocus = FocusNode();
   final FocusNode monthFocus = FocusNode();
@@ -29,6 +33,7 @@ class EditController extends GetxController{
   Rx<bool> qntWholeIsLastInput = true.obs;
   //inputs checks
   Rx<bool> qntHidden = false.obs;
+  Rx<bool> searchHidden = true.obs;
 
 
   Item emptyItem =  Item(
@@ -72,6 +77,39 @@ class EditController extends GetxController{
   RxList<dynamic> items = [].obs;
   get itemsList => items;
 
+    // search logic
+    String? lastItemSearchChar;
+    List<Item> itemSuggestions = [];
+    Future<List<Item?>> searchItems(String search) async {
+    // check if use just added the first char to search
+    // check if this char is not the last char we searched for
+    // so now we know that the input has only one char and this char is not our last one
+    // so now we need to call the server to load all account have this letter
+    if (search.length == 1 && search != lastItemSearchChar) {
+      lastItemSearchChar = search;
+      itemSuggestions =
+          await GlobalController().loadProductsAutcomplete(search);
+
+      // check if we already loaded the accounts from the server so we search
+      // here we make a clone of our suggestions to not corrubt the original one
+      // so if the user deleted the letter and start typing again everthing will work well
+    } else {
+      List<Item> filteredItemSuggestions = itemSuggestions.where((item) {
+        return item.itemName.toLowerCase().contains(search.toLowerCase());
+      }).toList();
+
+      // print(filteredItemSuggestions);
+      return filteredItemSuggestions;
+    }
+    return itemSuggestions;
+  }
+  
+    void itemAutocompleteSaved(context, Item item) {
+      codeController.text=item.serial.toString();
+      searchHidden.value = true;
+      itemLoaded(context , item);
+      _fieldFocusChange(context, itemFocus, wholeQntFocus);
+  }
   /// Only relevant for SimplePage at bottom
   void closeDoc() async {
     final Map req = {
@@ -84,11 +122,9 @@ class EditController extends GetxController{
     Get.toNamed('/home');
   }
 
-  void itemBCodeSubmitted(context, data) {
-    final Map req = {"BCode": data.toString()};
-    DocProvider().getItem(req).then((resp) {
-      // now we check if we gor response
-      if (resp == null) {
+
+  void itemLoaded(context , resp){
+    if (resp == null) {
         _fieldFocusChange(context, itemFocus, itemFocus);
         codeController.text = "";
         itemNotFound.value = true;
@@ -98,6 +134,7 @@ class EditController extends GetxController{
 
       //if we come heree that means we have got the item from the server successfully
       itemData.value = resp;
+      
       itemNotFound.value = false;
       // _fieldFocusChange(context, itemFocus, wholeQntFocus);
       
@@ -131,6 +168,12 @@ class EditController extends GetxController{
       } else {
         qntHidden.value = false;
       }
+  }
+  void itemBCodeSubmitted(context, data) {
+    final Map req = {"BCode": data.toString()};
+    DocProvider().getItem(req).then((resp) {
+      // now we check if we gor response
+      itemLoaded(context , resp);
       
 
       // _fieldFocusChange(context, itemFocus, wholeQntFocus);
@@ -151,6 +194,9 @@ class EditController extends GetxController{
 
     //check if item data is not set
     if (itemData.value == emptyItem) {
+      if(codeController.text != ""){
+        itemBCodeSubmitted(context, codeController.text);
+      }
       itemNotFound.value = true;
       return ;
     } else {
@@ -196,18 +242,8 @@ class EditController extends GetxController{
       };
       
       var resp = await DocProvider().insertItem(req);
-      itemData.value = emptyItem;
-      codeController.clear();
-      qntController.clear();
-      wholeQntController.clear();
-      codeController.clear();
-      monthController.clear();
-      yearController.clear();
       expD = null;
-      withExp.value = false;
-      fetchItems();
-
-      _fieldFocusChange(context, qntFocus, itemFocus);
+      reset(context);
     
 
       return ;
@@ -216,6 +252,22 @@ class EditController extends GetxController{
    
 
     
+  }
+
+  void reset(context){
+      itemData.value = emptyItem;
+      itemController.clear();
+      qntController.clear();
+      wholeQntController.clear();
+      codeController.clear();
+      monthController.clear();
+      yearController.clear();
+      searchHidden.value = true;
+      withExp.value = false;
+      fetchItems();
+
+      _fieldFocusChange(context, wholeQntFocus, itemCodeFocus);
+      
   }
 
   _fieldFocusChange(

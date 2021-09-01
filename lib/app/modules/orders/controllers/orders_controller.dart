@@ -189,9 +189,9 @@ class OrdersController extends GetxController {
       }
       final Map itemReq = {
         "HeadSerial": headSerial,
-        " ItemSerial": itemData.serial,
-        " Qnt": qnt,
-        " Price": itemData.pOSPP,
+        "ItemSerial": itemData.serial,
+        "Qnt": qnt,
+        "Price": itemData.pOSPP,
       };
 
       var resp = await OrdersProvider().insertOrderItem(itemReq);

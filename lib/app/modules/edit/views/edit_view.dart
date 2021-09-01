@@ -2,6 +2,7 @@ import 'package:elnozom_pda/app/controllers/global_controller.dart';
 import 'package:elnozom_pda/app/data/models/item_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:elnozom_pda/widgets/ProductsSearch.dart';
 
 import 'package:get/get.dart';
 
@@ -85,7 +86,7 @@ Widget insert(context, controller) {
               child: Column(children: <Widget>[
                 FormBuilderTextField(
                   name: 'bcode_item',
-                  focusNode: controller.itemFocus,
+                  focusNode: controller.itemCodeFocus,
                   controller: controller.codeController,
                   textInputAction: TextInputAction.next,
                   autofocus: true,
@@ -121,6 +122,18 @@ Widget insert(context, controller) {
                     );
                   } else {
                     return SizedBox(height: 0);
+                  }
+                }),
+                Obx(() {
+                  if(controller.searchHidden.value == false){
+                    return Column(
+                      children: [
+                        getProductsSearch(context , controller),
+                        TextButton(child: Text("اخفاء حقل البحث عن المنتج") , onPressed: () => controller.searchHidden.value = true),
+                      ],
+                    );
+                  } else {
+                    return TextButton(child: Text("اظهار حقل البحث عن المنتج") , onPressed: () => controller.searchHidden.value = false);
                   }
                 }),
                 Row(children: [

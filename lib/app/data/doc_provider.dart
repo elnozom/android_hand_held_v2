@@ -24,7 +24,10 @@ class DocProvider extends GetConnect {
   }
   Future<InsertPrepareItemResp> insertPrepareItem(Map data) async {
     config = await GlobalController().getConfigCache();
+    print(data);
     final response = await post('${config.server}invoice', data);
+    print(response.body);
+    print('response.body');
     if (response.status.hasError) {
       return Future.error(response.statusText.toString());
     } else {
@@ -48,6 +51,26 @@ class DocProvider extends GetConnect {
           items.add(docItem);
         });
       return items;
+    }
+  }
+
+  Future<List<dynamic>> getMsgs(Map data) async {
+    config = await GlobalController().getConfigCache();
+    final response = await get('${config.server}msgs?EmpSerial=${data["EmpSerial"]}&BonSerial=${data["BonSerial"]}');
+    if (response.status.hasError) {
+      return Future.error(response.statusText.toString());
+    } else {
+      return response.body;
+    }
+  }
+
+  Future<String> readMsgs(Map data) async {
+    config = await GlobalController().getConfigCache();
+    final response = await put('${config.server}msgs/read' , data);
+    if (response.status.hasError) {
+      return Future.error(response.statusText.toString());
+    } else {
+      return response.body;
     }
   }
 
@@ -142,7 +165,6 @@ class DocProvider extends GetConnect {
   Future<List<PrepareItem>> getInv(Map data) async {
     config = await GlobalController().getConfigCache();
     final response = await get('${config.server}invoice?BCode=${data["BCode"]}');
-    print(response.body);
     if (response.status.hasError) {
       return Future.error(response.statusText.toString());
     } else {
