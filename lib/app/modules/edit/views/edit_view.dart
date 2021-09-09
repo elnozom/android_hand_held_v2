@@ -124,18 +124,7 @@ Widget insert(context, controller) {
                     return SizedBox(height: 0);
                   }
                 }),
-                Obx(() {
-                  if(controller.searchHidden.value == false){
-                    return Column(
-                      children: [
-                        getProductsSearch(context , controller),
-                        TextButton(child: Text("اخفاء حقل البحث عن المنتج") , onPressed: () => controller.searchHidden.value = true),
-                      ],
-                    );
-                  } else {
-                    return TextButton(child: Text("اظهار حقل البحث عن المنتج") , onPressed: () => controller.searchHidden.value = false);
-                  }
-                }),
+                
                 Row(children: [
                   Expanded(
                     child: FormBuilderTextField(
@@ -226,7 +215,18 @@ Widget insert(context, controller) {
                   }
                 }),
                 // check if item has expiry and its not passed from the server to show the data inputs
-
+                Obx(() {
+                  if(controller.searchHidden.value == false){
+                    return Column(
+                      children: [
+                        getProductsSearch(context , controller),
+                        TextButton(child: Text("اخفاء حقل البحث عن المنتج") , onPressed: () => controller.searchHidden.value = true),
+                      ],
+                    );
+                  } else {
+                    return TextButton(child: Text("اظهار حقل البحث عن المنتج") , onPressed: () => controller.searchHidden.value = false);
+                  }
+                }),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20.0),
                   child: SizedBox(

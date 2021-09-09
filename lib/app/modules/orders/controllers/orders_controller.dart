@@ -1,7 +1,6 @@
 import 'package:elnozom_pda/app/controllers/global_controller.dart';
 import 'package:elnozom_pda/app/data/doc_provider.dart';
 import 'package:elnozom_pda/app/data/models/config_model.dart';
-import 'package:elnozom_pda/app/data/models/doc_item_model.dart';
 import 'package:elnozom_pda/app/data/models/item_model.dart';
 import 'package:elnozom_pda/app/data/models/order_item_model.dart';
 import 'package:elnozom_pda/app/data/orders_provider.dart';
@@ -146,9 +145,10 @@ class OrdersController extends GetxController {
     if (!formKey.currentState!.validate()) {
       return;
     }
-
+   
     //check if item data is not set
-    if (itemData == emptyItem) {
+    if (itemData.itemName == '0') {
+      print("asdasdasd");
       itemNotFound.value = true;
       return;
     } else {

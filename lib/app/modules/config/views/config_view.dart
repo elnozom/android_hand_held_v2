@@ -12,6 +12,7 @@ import '../controllers/config_controller.dart';
 class ConfigView extends GetView<ConfigController> {
   @override
   Widget build(BuildContext context) {
+    controller.accBCode.text = "";
     return WillPopScope(
         onWillPop: () async {
           await Get.offAllNamed('/home');

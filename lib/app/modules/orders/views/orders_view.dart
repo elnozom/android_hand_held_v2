@@ -1,11 +1,9 @@
 import 'package:elnozom_pda/app/controllers/global_controller.dart';
-import 'package:elnozom_pda/app/data/models/item_model.dart';
 import 'package:elnozom_pda/app/data/models/order_item_model.dart';
 import 'package:elnozom_pda/widgets/ProductsSearch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
-import 'package:simple_autocomplete_formfield/simple_autocomplete_formfield.dart';
 
 import '../controllers/orders_controller.dart';
 
@@ -130,6 +128,13 @@ Widget insert(context, controller) {
                 Obx(() {
                   if (controller.qntErr.value == true) {
                     return Text("من فضلك ادخل كمية");
+                  } else {
+                    return SizedBox(height: 0);
+                  }
+                }),
+                Obx(() {
+                  if (controller.itemNotFound.value == true) {
+                    return Text("من فضلك اختر المنتج ");
                   } else {
                     return SizedBox(height: 0);
                   }

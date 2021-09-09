@@ -70,7 +70,7 @@ class TrolleyView extends GetView<TrolleyController> {
                                   ),
                                 ],
                               ),
-                              Row(
+                              if(!controller.item![0]['ByWeight']) Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [

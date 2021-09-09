@@ -174,7 +174,7 @@ class ConfigController extends GetxController with StateMixin<List<Store>> {
   }
 
   void onClose() {
-    accBCode.dispose();
+    accBCode.clear();
   }
 
   void onChanged(data) {
