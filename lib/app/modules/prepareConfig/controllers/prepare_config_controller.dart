@@ -1,13 +1,10 @@
-import 'package:elnozom_pda/app/controllers/global_controller.dart';
 import 'package:elnozom_pda/app/data/acc_provider.dart';
 import 'package:elnozom_pda/app/data/doc_provider.dart';
-import 'package:elnozom_pda/app/data/global_provider.dart';
-import 'package:elnozom_pda/app/data/models/acc_model.dart';
 import 'package:elnozom_pda/app/data/models/config_model.dart';
 import 'package:elnozom_pda/app/data/models/emp_model.dart';
 import 'package:elnozom_pda/app/data/models/prepare_config_model.dart';
 import 'package:elnozom_pda/app/data/models/prepare_item_model.dart';
-import 'package:elnozom_pda/app/data/models/store_model.dart';
+import 'package:elnozom_pda/app/utils/barcode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -39,7 +36,11 @@ class PrepareConfigController extends GetxController {
         PrepareConfig arguments = PrepareConfig(
             empCode: int.parse(empBCode.text),
             hSerial: int.parse(invoice.first.bonSer),
+            barcode: invBCode.text,
             invoice: invoice);
+
+
+            // print(arguments.empCode);
         Get.toNamed('/prepare', arguments: arguments);
       }
     } else {
@@ -111,6 +112,14 @@ class PrepareConfigController extends GetxController {
     });
   }
 
+
+  Future scanBarcode(context) async{
+    final barcode = BarCode.instance;
+    barcode.scanBarcode().then((value) {
+      invBCode.text = value;
+      invBCodeSubmitted(context);
+    });
+  }
   // this function will be executed when the user hit enter on the barcode input
   // we want to chek if we are creatint prepare document then we make sure to load employee
   void invBCodeSubmitted(context) {

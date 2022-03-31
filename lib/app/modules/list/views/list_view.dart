@@ -29,9 +29,6 @@ class ListView extends GetView<ListController> {
               child: Container(
               alignment: Alignment.topCenter,
               child: Obx(() {
-                // print(controller.docsList.isEmpty);
-                // return Text(controller.docsList.toString());
-                // return Text(controller.itemNotFound.value.toString());
                 if (controller.ordersList[0].docNo == "-1" &&
                         controller.isOrder ||
                     controller.docsList[0].docNo == -1 &&

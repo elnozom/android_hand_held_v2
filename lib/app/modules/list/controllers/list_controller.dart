@@ -64,7 +64,7 @@ class ListController extends GetxController {
     if (isOrder) {
       // load the unprepared orders from the server
       DocProvider().getUnpreparedDocs().then((resp) {
-        if(resp != null) openOrders.value = resp;
+        if(resp != null && resp.isNotEmpty) openOrders.value = resp;
       }, onError: (err) {
         print(err);
       });
@@ -75,7 +75,6 @@ class ListController extends GetxController {
         if(resp.isNotEmpty){
           openDocs.value = resp;
         }
-        print(openDocs.value);
       }, onError: (err) {
         print(err);
       });

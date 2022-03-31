@@ -8,22 +8,29 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class SettingsController extends GetxController  with StateMixin<List<Store>> {
+class SettingsController extends GetxController with StateMixin<List<Store>> {
   //TODO: Implement SettingsController
 
   ConfigCache config = ConfigCache();
   List<Store> stores = [];
-  final deviceController = TextEditingController();
+  final passwordController = TextEditingController();
   final serverController = TextEditingController();
   List<DropdownMenuItem<int>> storesDropdownItems = [];
   final formKey = GlobalKey<FormBuilderState>();
+  bool isAuthorized = false;
+  bool wrongPassword = false;
 
-  int? selectedOption ;
+  int? selectedOption;
   @override
   void onInit() async {
     super.onInit();
-    
-      config = await GlobalController().getConfigCache();
+      change(null, status: RxStatus.success());
+  }
+
+  void init() async {
+      isAuthorized = true;
+    final prefs = await SharedPreferences.getInstance();
+    config = await GlobalController().getConfigCache();
     GlobalProvider().getStores().then((resp) {
       stores = resp;
       storesDropdownItems = stores.map((Store store) {
@@ -32,13 +39,24 @@ class SettingsController extends GetxController  with StateMixin<List<Store>> {
           child: Text('${store.storeName}'),
         );
       }).toList();
-    selectedOption = config.store;
-    deviceController.text = config.device.toString();
-    serverController.text = config.server.toString();
-     change(resp, status: RxStatus.success());
+      selectedOption = config.store;
+      serverController.text = prefs.getString('server') != null
+          ? prefs.getString('server')!
+          : "192.168.1.192:8585";
+      change(resp, status: RxStatus.success());
     }, onError: (err) {
-     change(null, status: RxStatus.error(err.toString()));
+      change(null, status: RxStatus.error(err.toString()));
     });
+  }
+
+  void authorize() {
+    if (passwordController.text == '1234') {
+      wrongPassword = false;
+      init();
+    } else {
+      wrongPassword = true;
+      change(null, status: RxStatus.success());
+    }
   }
 
   void storeChanged(data) {
@@ -46,20 +64,18 @@ class SettingsController extends GetxController  with StateMixin<List<Store>> {
   }
 
   void submit() async {
-      final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     if (!formKey.currentState!.validate()) {
-      return ;
+      return;
     } else {
-      int device =int.parse(deviceController.text);
       String server = serverController.text;
-      prefs.setInt("store", selectedOption!);
-      prefs.setInt("device", device);
+      prefs.setInt("store", selectedOption!); 
       prefs.setString("server", server);
       formKey.currentState!.save();
       Get.offAllNamed("/home");
     }
-    print(prefs.getInt("device"));
   }
+
   @override
   void onReady() {
     super.onReady();
@@ -67,5 +83,4 @@ class SettingsController extends GetxController  with StateMixin<List<Store>> {
 
   @override
   void onClose() {}
-  
 }

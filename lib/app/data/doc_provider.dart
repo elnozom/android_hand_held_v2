@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:elnozom_pda/app/controllers/global_controller.dart';
 import 'package:elnozom_pda/app/data/models/config_cache_model.dart';
 import 'package:elnozom_pda/app/data/models/doc_item_model.dart';
@@ -24,11 +22,10 @@ class DocProvider extends GetConnect {
   }
   Future<InsertPrepareItemResp> insertPrepareItem(Map data) async {
     config = await GlobalController().getConfigCache();
-    print(data);
     final response = await post('${config.server}invoice', data);
-    print(response.body);
-    print('response.body');
     if (response.status.hasError) {
+      print("r");
+      print(response.statusText.toString());
       return Future.error(response.statusText.toString());
     } else {
       return InsertPrepareItemResp.fromJson(response.body[0]);
@@ -96,7 +93,6 @@ class DocProvider extends GetConnect {
         Item item = Item.fromJson(res);
         items.add(item);
       });
-      // print(items);
       return items;
     }
   }
@@ -112,6 +108,39 @@ class DocProvider extends GetConnect {
       return response.body;
     }
   }
+  Future<List<dynamic>> getUnDestributedItem(String BCode) async {
+    config = await GlobalController().getConfigCache();
+    final response = await get('${config.server}doc/undestributed/${BCode}');
+    if (response.status.hasError) {
+      return Future.error(response.statusText.toString());
+    } else {
+      return response.body;
+    }
+  }
+
+
+  Future<List<dynamic>> getAreaDocs(Map data) async {
+    config = await GlobalController().getConfigCache();
+    final response = await get('${config.server}doc/area?Area=${data["Area"]}&Serial=${data["Serial"]}');
+    if (response.status.hasError) {
+      return Future.error(response.statusText.toString());
+    } else {
+      return response.body;
+    }
+  }
+
+  Future<String> updateDriver(Map data) async {
+    config = await GlobalController().getConfigCache();
+    final response = await post('${config.server}update-driver' , data);
+    if (response.status.hasError) {
+      return Future.error(response.statusText.toString());
+    } else {
+      return response.body;
+    }
+  }
+  
+
+  
 
   
 
@@ -149,16 +178,30 @@ class DocProvider extends GetConnect {
   }
 
 
-  
-  Future<int?> isInventory() async {
+  // is inventry called to validate that there is an inventory session opened or not 
+  // if theres inventory sesssion we will prevent user from going to any document page other than inventory
+  // if the session is not pened the we cant create inventory document until we pen session
+  Future<dynamic?> isInventory() async {
     config = await GlobalController().getConfigCache();
     Map data = {"StoreCode" : config.store};
     final response = await post('${config.server}invenetory' , data);
+    print(response.body);
     if (response.status.hasError) {
       return Future.error(response.statusText.toString());
     } else {
-      // print(response.body[0]['SessionNo']);
-      return response.body == null ? null : response.body[0]['SessionNo'];
+      return response.body == null ? null : response.body[0];
+    }
+  }
+   Future<dynamic> raseedInvInsert(Map data) async {
+    config = await GlobalController().getConfigCache();
+     data["StoreCode"] =  config.store;
+
+
+    final response = await post('${config.server}raseed' , data);
+    if (response.status.hasError) {
+      return Future.error(response.statusText.toString());
+    } else {
+      return response.body;
     }
   }
 
@@ -175,6 +218,18 @@ class DocProvider extends GetConnect {
           items.add(prepareItem);
         });
       return items;
+    }
+  }
+
+   Future<int> isItemInInvoice(Map data) async {
+    config = await GlobalController().getConfigCache();
+    final response = await get('${config.server}invoice/item?ItemSerial=${data["ItemSerial"]}&BonSerial=${data["BonSerial"]}');
+    if (response.status.hasError) {
+      print('response.statusText.toString()');
+      print(response.statusText.toString());
+      return Future.error(response.statusText.toString());
+    } else {
+      return response.body['Found'];
     }
   }
   Future<bool> removeDocItem(Map data) async {

@@ -2,6 +2,7 @@ import 'package:elnozom_pda/app/controllers/global_controller.dart';
 import 'package:elnozom_pda/app/data/models/config_cache_model.dart';
 import 'package:elnozom_pda/app/data/models/item_model.dart';
 import 'package:elnozom_pda/app/data/models/order_item_model.dart';
+import 'package:elnozom_pda/app/data/models/order_totals_model.dart';
 import 'package:get/get.dart';
 
 class OrdersProvider extends GetConnect {
@@ -14,10 +15,16 @@ class OrdersProvider extends GetConnect {
     final response = await post('${config.server}orders', data);
     return response.body;
   }
-  Future<String> insertOrderItem(Map data) async {
+  Future<OrderTotals> insertOrderItem(Map data) async {
     config = await GlobalController().getConfigCache();
     final response = await post('${config.server}orders/item', data);
-    return "response.body";
+    return OrderTotals.fromJson(response.body);
+  }
+
+ Future<String> closeOrder(Map data) async {
+    config = await GlobalController().getConfigCache();
+    final response = await post('${config.server}orders/close', data);
+    return response.body;
   }
 
   Future<List<OrderItem>> getOrderItems(int serial) async {

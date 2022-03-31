@@ -1,4 +1,5 @@
 import 'package:elnozom_pda/app/data/doc_provider.dart';
+import 'package:elnozom_pda/app/data/global_provider.dart';
 import 'package:elnozom_pda/app/data/models/config_model.dart';
 import 'package:elnozom_pda/app/data/models/item_model.dart';
 import 'package:elnozom_pda/app/data/models/tab_model.dart';
@@ -6,10 +7,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
+// import 'package:imei_plugin/imei_plugin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/app/data/models/store_model.dart';
 
 class HomeController extends GetxController {
+  Rx<bool> loading = true.obs;
   final List<TabModel> tabs = [
     TabModel(
       icon: Icons.add_shopping_cart,
@@ -19,7 +22,6 @@ class HomeController extends GetxController {
       accountType: 2,
       type: 2,
     ),
-
     TabModel(
       icon: Icons.production_quantity_limits,
       text: 'مرتجع مشتريات',
@@ -27,6 +29,14 @@ class HomeController extends GetxController {
       link: 'buy-return',
       accountType: 2,
       type: 2,
+    ),
+    TabModel(
+      icon: Icons.add_shopping_cart,
+      text: "المنتجات",
+      transSerial: -2,
+      link: "products",
+      accountType: 0,
+      type: 0,
     ),
     TabModel(
       icon: Icons.credit_score,
@@ -76,14 +86,7 @@ class HomeController extends GetxController {
       accountType: -1,
       type: -1,
     ),
-    // TabModel(
-    //   icon: Icons.inventory_2_outlined,
-    //   text: 'تحضير',
-    //   transSerial: 100,
-    //   link: 'preparation',
-    //   accountType: 1,
-    //   type: -1,
-    // ),
+    
     TabModel(
       icon: Icons.inventory_2_outlined,
       text: 'مستندات تحضير',
@@ -92,14 +95,22 @@ class HomeController extends GetxController {
       accountType: -1,
       type: -1,
     ),
-     TabModel(
+    TabModel(
       icon: Icons.inventory_2_outlined,
-      text: 'امر بيع',
+      text: 'توزيع',
       transSerial: 102,
-      link: 'salesOrder',
-      accountType: 1,
-      type: 1,
+      link: 'distribution',
+      accountType: 0,
+      type: -1,
     ),
+    // TabModel(
+    //   icon: Icons.inventory_2_outlined,
+    //   text: 'امر بيع',
+    //   transSerial: 102,
+    //   link: 'salesOrder',
+    //   accountType: 1,
+    //   type: 1,
+    // ),
     TabModel(
       icon: Icons.settings_outlined,
       text: "الاعدادات",
@@ -111,6 +122,9 @@ class HomeController extends GetxController {
   ];
 
   void goTo(index) {
+    // init();
+  
+    // return;
     var tab = tabs[index];
     Config arguments = new Config(
         trSerial: tab.transSerial,
@@ -118,11 +132,15 @@ class HomeController extends GetxController {
         accType: tab.accountType,
         sessionNo: 0);
 
+    if (tab.transSerial == -2) {
+      Get.toNamed("/products");
+      return;
+    }
     if (tab.transSerial == -1) {
-      print('trolley');
       Get.toNamed("/trolley");
       return;
     }
+
     if (tab.transSerial == 0) {
       Get.toNamed("/settings");
       return;
@@ -139,11 +157,12 @@ class HomeController extends GetxController {
           );
           return;
         } else {
-          arguments.sessionNo = resp;
+          arguments.sessionNo = resp['SessionNo'];
+          arguments.partInv = resp['PartInv'];
           Get.toNamed('/list', arguments: arguments);
         }
       } else {
-        if (resp != null) {
+        if (resp != null && !resp['PartInv']) {
           Get.snackbar(
             "عفوا",
             " توجد فترة جرد مفتوحة  لايمكنك عمل اي حركات في الوقت الحالي",
@@ -151,7 +170,8 @@ class HomeController extends GetxController {
           return;
         } else {
           if (tab.transSerial == 102) {
-            Get.toNamed("/config", arguments: arguments);
+            print("asdasd");
+            Get.toNamed("/distribute", arguments: arguments);
             return;
           } else {
             Get.toNamed("/list", arguments: arguments);
@@ -159,14 +179,26 @@ class HomeController extends GetxController {
         }
       }
     }, onError: (err) {
-         Get.snackbar(
-          "عفوا",
-          "لا يمكن الاتصال بالخادم في الوقت الحالي من فصلك حاول مرة اخري"
-        );
-      });
+      Get.toNamed("/serverdown");
+    });
     // trolley check
 
     // rest
+  }
+
+  Future<void> init() async {
+    GlobalProvider().checkDevice().then((int valid) async {
+      // if (valid == 0) {
+      //   Get.toNamed("/unauthorized");
+      // } else {
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setInt("device", valid);
+        print(valid);
+        loading.value = false;
+      // }
+    } , onError: (err){
+       Get.toNamed("/serverdown");
+    });
   }
 
   @override

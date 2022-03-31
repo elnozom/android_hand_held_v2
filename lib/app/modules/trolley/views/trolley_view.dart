@@ -25,10 +25,26 @@ class TrolleyView extends GetView<TrolleyController> {
                           {controller.itemChanged(context, data)},
                       decoration: const InputDecoration(labelText: 'ادخل كود '),
                     ),
+                    Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10.0),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 60,
+                            child: ElevatedButton(
+                              child: Text(
+                                "قراءة الباركود",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              onPressed: () {
+                                controller.scanBarcode(context);
+                              },
+                            ),
+                          ),
+                        ),
                     SizedBox(
                       height: 30,
                     ),
-                    if (controller.itemNotFound) Text('لا يوجد صنف بهئا الكود'),
+                    if (controller.itemNotFound) Text('لا يوجد صنف بهذا الكود'),
                     controller.item != null && controller.item!.isNotEmpty
                         ? Container(
                             padding: EdgeInsets.all(10.0),

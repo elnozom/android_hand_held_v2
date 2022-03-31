@@ -60,44 +60,7 @@ class ConfigView extends GetView<ConfigController> {
                                 Text("عفوا هذا الحساب غير موجود"),
                               Text(controller.accountName),
                               if (controller.showAccSearch)
-                                SimpleAutocompleteFormField<Acc>(
-                                  maxSuggestions: 20,
-                                  suggestionsHeight: 100,
-                                  decoration: InputDecoration(
-                                      labelText: 'ابحث عن الحساب'),
-                                  itemBuilder: (context, item) => Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text('${item!.accountName}',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold)),
-                                          Text(
-                                              'كود رقم : ${item.accountCode.toString()}',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold)),
-                                        ]),
-                                  ),
-                                  onSearch: (search) async =>
-                                      controller.searchAccs(search),
-                                  itemToString: (item) {
-                                    return item == null ? "" : item.accountName;
-                                  },
-                                  itemFromString: (string) {
-                                    final matches = GlobalController()
-                                        .accountSuggestions
-                                        .where((item) =>
-                                            item.accountName.toLowerCase() ==
-                                            string.toLowerCase());
-                                    return matches.isEmpty
-                                        ? null
-                                        : matches.first;
-                                  },
-                                  onChanged:
-                                      controller.accountAutocompleteSaved,
-                                ),
+                              controller.account.getAccountSearch(context , controller.config.accType ,'ابحث عن الحساب'),
                               // hide this option prementetly if we are on the transaction
                               if (controller.config.trSerial != 27)
                                 TextButton(

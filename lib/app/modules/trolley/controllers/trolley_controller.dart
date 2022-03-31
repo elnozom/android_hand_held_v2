@@ -1,5 +1,6 @@
 import 'package:elnozom_pda/app/data/doc_provider.dart';
 import 'package:elnozom_pda/app/data/models/item_model.dart';
+import 'package:elnozom_pda/app/utils/barcode.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
@@ -20,7 +21,13 @@ class TrolleyController extends GetxController with StateMixin<List<dynamic?>> {
     super.onReady();
     change(null, status: RxStatus.success());
   }
-
+  Future scanBarcode(context) async{
+    final barcode = BarCode.instance;
+    barcode.scanBarcode().then((value) {
+      codeController.text = value;
+      itemChanged(context , value);
+    });
+  }
   void itemChanged(context, data) {
     final Map req = {"BCode": data.toString(), "StoreCode": 1};
     itemFocus.unfocus();

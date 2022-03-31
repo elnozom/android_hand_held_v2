@@ -3,6 +3,7 @@ import 'package:elnozom_pda/app/data/doc_provider.dart';
 import 'package:elnozom_pda/app/data/models/config_model.dart';
 import 'package:elnozom_pda/app/data/models/item_model.dart';
 import 'package:elnozom_pda/app/data/models/order_item_model.dart';
+import 'package:elnozom_pda/app/data/models/order_totals_model.dart';
 import 'package:elnozom_pda/app/data/orders_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -34,13 +35,15 @@ class OrdersController extends GetxController {
 
   String? lastItemSearchChar;
   List<Item> itemSuggestions = [];
-
+  Rx<OrderTotals> totals = OrderTotals(totalPackages: 0, totalCash: 0.0, serial: 0).obs;
   Item emptyItem = Item(
     serial: 0,
     itemName: "0",
     minorPerMajor: 0,
     pOSPP: 0,
     pOSTP: 0,
+     i : 0,
+    r : 0,
     byWeight: false,
     withExp: false,
     itemHasAntherUnit: false,
@@ -54,6 +57,8 @@ class OrdersController extends GetxController {
     minorPerMajor: 0,
     pOSPP: 0,
     pOSTP: 0,
+     i : 0,
+    r : 0,
     byWeight: false,
     withExp: false,
     itemHasAntherUnit: false,
@@ -73,22 +78,22 @@ class OrdersController extends GetxController {
     "المنتج",
     "الاجمالي",
   ];
-  OrderItem emptyOrderItem  = OrderItem(serial: -1, barCode: -1, itemName: '', qnt: 0, price: 0, total: 0);
-  RxList<OrderItem> items = [OrderItem(serial: -1, barCode: -1, itemName: '', qnt: 0, price: 0, total: 0)].obs;
+  OrderItem emptyOrderItem  = OrderItem(serial: -1, barCode: -1, qntAntherUnit: 0,itemName: '', qnt: 0, price: 0, total: 0);
+  RxList<OrderItem> items = [OrderItem(serial: -1, barCode: -1, qntAntherUnit: 0,itemName: '', qnt: 0, price: 0, total: 0)].obs;
   get itemsList => items;
 
   /// Only relevant for SimplePage at bottom
   void closeDoc() async {
-    final Map req = {"trans": config.trSerial, "DocNo": config.docNo};
+    final Map req = {"Serial": config.headSerial, "TotalCash": 100};
     // print(req);
-    var resp = await DocProvider().closeDoc(req);
+    await OrdersProvider().closeOrder(req);
 
     Get.toNamed('/home');
   }
 
   void itemAutocompleteSaved(context, Item item) {
-    // aet the with exp fkag to the value from the server
-    withExp.value = item.withExp;
+    // get the with exp fkag to the value from the server
+    if( item.withExp ) withExp.value = item.withExp;
     itemData = item;
 
     // first we set the expexisted to its default value
@@ -122,9 +127,13 @@ class OrdersController extends GetxController {
     // so now we know that the input has only one char and this char is not our last one
     // so now we need to call the server to load all account have this letter
     if (search.length == 1 && search != lastItemSearchChar) {
+
+      print("searcg");
       lastItemSearchChar = search;
       itemSuggestions =
           await GlobalController().loadProductsAutcomplete(search);
+
+          print(itemSuggestions);
 
       // check if we already loaded the accounts from the server so we search
       // here we make a clone of our suggestions to not corrubt the original one
@@ -141,6 +150,7 @@ class OrdersController extends GetxController {
   }
 
   void submit(context) async {
+    print("asdasdasdasd");
     formKey.currentState!.save();
     if (!formKey.currentState!.validate()) {
       return;
@@ -148,22 +158,28 @@ class OrdersController extends GetxController {
    
     //check if item data is not set
     if (itemData.itemName == '0') {
-      print("asdasdasd");
       itemNotFound.value = true;
       return;
     } else {
+      itemNotFound.value = false;
       // declar the qnt
       // set the value of qntcontroller to = if its not set
       // then check if the item is byweight to set qnt to the whole qnt value
       // if false then we make our calculation as (whole qnt * minor + part qnt)
       // ant then we have the qnt value which will bend send to the server
+
+       
       qntController.text = qntController.text == "" ? '0' : qntController.text;
       final bool byWeight = itemData.byWeight;
+      final bool hasAntherUnit = itemData.itemHasAntherUnit;
+      final double avgWeight =itemData.avrWait;
       final double whole = double.parse(wholeQntController.text);
       final double part = double.parse(qntController.text);
       final double minor = itemData.minorPerMajor.toDouble();
 
-      double qnt = GlobalController.loadItemQnt(byWeight, whole, part, minor);
+      List<double> qntList = loadItemQnt(byWeight,hasAntherUnit ,avgWeight, whole, part, minor);
+      double qnt = qntList[0];
+      double qntAntherUnit = qntList[1];
 
       // CHECK IF qnt is 0 to show error
       if (qnt == 0) {
@@ -179,43 +195,82 @@ class OrdersController extends GetxController {
           : null;
       if (items.value.first.serial == -1) {
         final Map orderReq = {
-          "DocNo": 12,
           "AccountSerial": config.accSerial,
           "EmpCode": 0,
         };
-
         headSerial = await OrdersProvider().insertOrder(orderReq);
         config.headSerial = headSerial;
       }
+
+      if(qnt == 0) {
+         Get.snackbar(
+            "عفوا",
+            "هذا المنتج لا يحتوي علي متوسط الوزن من فضلك قم باعداده اولا للتمكن من اضافته",
+           );
+        return ;
+      }
+
+     
       final Map itemReq = {
         "HeadSerial": headSerial,
         "ItemSerial": itemData.serial,
         "Qnt": qnt,
+        "QntAntherUnit" : qntAntherUnit,
         "Price": itemData.pOSPP,
       };
 
       var resp = await OrdersProvider().insertOrderItem(itemReq);
-      OrderItem item = OrderItem(itemName: itemData.itemName ,serial: itemData.serial ,barCode: itemData.serial ,qnt: qnt , price:itemData.pOSPP , total: (itemData.pOSPP * qnt));
+      totals.value = resp;
+      OrderItem item = OrderItem(itemName: itemData.itemName ,serial: itemData.serial ,barCode: itemData.serial ,qnt: qnt ,qntAntherUnit: qntAntherUnit , price:itemData.pOSPP , total: (itemData.pOSPP * qnt));
       if(items.value.first.serial == -1){
         items.value = [item];
       } else {
         items.value.add(item);
-        
       }
 
+     _reset(context);
+     expD = null;
       
+      return;
+    }
+  }
+
+  // load item qnt is function to call when i need to calculate the qnt 
+  // which will passed to the server from whole and part qnt inputs entered by user
+  // it depends on is item by weight  or not 
+  //  and depend on minor per major
+  List<double> loadItemQnt(bool byWeight , bool hasAntherUnit, double avgWeight , double whole ,double part ,double minor){
+    double qnt = 0;
+    double qntAntherUnit = 0.0;
+    if (byWeight) {
+       if (hasAntherUnit) {
+         qntAntherUnit = whole;
+       } else {
+          qnt = whole;
+       }
+      
+    } else {
+      if (hasAntherUnit) {
+        qntAntherUnit =  whole * minor +part;
+        qnt =  qntAntherUnit * avgWeight;
+       } else {
+        qnt = whole * minor +part;
+       }
+    }
+
+    return [qnt , qntAntherUnit];
+  }
+
+  _reset(context){
       itemData = emptyItem;
       itemController.clear();
       wholeQntController.clear();
       qntController.clear();
       monthController.clear();
       yearController.clear();
-      expD = null;
       withExp.value = false;
-      var currentInput = qntHidden.value == true ? wholeQntFocus : qntFocus;
+       var currentInput = qntHidden.value == true ? wholeQntFocus : qntFocus;
       _fieldFocusChange(context, currentInput, itemFocus);
-      return;
-    }
   }
 
   _fieldFocusChange(

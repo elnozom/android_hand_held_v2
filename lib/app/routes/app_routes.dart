@@ -13,6 +13,11 @@ abstract class Routes {
   static const PREPARE = _Paths.PREPARE;
   static const PREPARE_CONFIG = _Paths.PREPARE_CONFIG;
   static const ORDERS = _Paths.ORDERS;
+  static const UNAUTHORIZED = _Paths.UNAUTHORIZED;
+  static const SERVERDOWN = _Paths.SERVERDOWN;
+  static const DISTRIBUTE = _Paths.DISTRIBUTE;
+  static const BARCODE = _Paths.BARCODE;
+  static const PRODUCTS = _Paths.PRODUCTS;
 }
 
 abstract class _Paths {
@@ -25,4 +30,9 @@ abstract class _Paths {
   static const PREPARE = '/prepare';
   static const PREPARE_CONFIG = '/prepare-config';
   static const ORDERS = '/orders';
+  static const UNAUTHORIZED = '/unauthorized';
+  static const SERVERDOWN = '/serverdown';
+  static const DISTRIBUTE = '/distribute';
+  static const BARCODE = '/barcode';
+  static const PRODUCTS = '/products';
 }

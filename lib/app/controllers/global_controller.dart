@@ -23,14 +23,26 @@ class GlobalController extends GetxController {
   String? lastItemSearchChar;
 
 
+
+String encrypt(String k){
+     
+    String encrypted = "";
+    for (var position = 1; position <= k.length; position++) {
+      int asciKey = k.codeUnitAt(position -1);
+      int newAsciKey =  asciKey + (position * 3) -  position;
+      encrypted = encrypted + String.fromCharCode(newAsciKey);
+    }
+    return encrypted;
+  }
+
 // load the meta from cache
   Future<ConfigCache> getConfigCache() async {
     final prefs = await SharedPreferences.getInstance();
     final store = prefs.getInt('store') == null ? 1 : prefs.getInt('store');
     final device = prefs.getInt('device') == null ? 1 : prefs.getInt('device');
     final server = prefs.getString('server') == null
-        ? "http://192.168.1.40:8585/api/"
-        : prefs.getString('server');
+        ? "http://192.168.1.192:8585/api/"
+        :'http://${prefs.getString('server')}/api/';
 
     ConfigCache config =
         ConfigCache(device: device, store: store, server: server);
@@ -44,7 +56,7 @@ class GlobalController extends GetxController {
     if (prefs.getInt('device') == null) await prefs.setInt('device', 1);
     if (prefs.getInt('store') == null) await prefs.setInt('store', 1);
     if (prefs.getString('server') == null)
-      await prefs.setString('server', "http://192.168.1.40:8585/api/");
+      await prefs.setString('server', "http://192.168.1.192:8585/api/");
   }
 
   //validations
@@ -66,20 +78,7 @@ class GlobalController extends GetxController {
     return numericRegex.hasMatch(string);
   }
 
-  // load item qnt is function to call when i need to calculate the qnt 
-  // which will passed to the server from whole and part qnt inputs entered by user
-  // it depends on is item by weight  or not 
-  //  and depend on minor per major
-  static double loadItemQnt(bool byWeight ,double whole ,double part ,double minor){
-    double qnt;
-    if (byWeight) {
-      qnt = whole;
-    } else {
-      qnt = whole * minor +part;
-    }
-
-    return qnt;
-  }
+  
 
   List<String? Function(String?)> loadConfigEmpBarCodeValidators(context) {
     var bCodeValidatores = [
@@ -203,7 +202,6 @@ class GlobalController extends GetxController {
 
   // search products for the product autocomplete field on orders page
   Future<List<Item>> loadProductsAutcomplete(String search) async {
-    
     var req = {"Name": search};
     await DocProvider().searchItem(req).then((resp) {
       // set the no accounts flag
@@ -216,6 +214,7 @@ class GlobalController extends GetxController {
       }
     }, onError: (err) {
       noItemsFound = true;
+      print(err);
     });
 
     return itemSuggestions;

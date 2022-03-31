@@ -3,6 +3,7 @@ import 'package:elnozom_pda/app/data/doc_provider.dart';
 import 'package:elnozom_pda/app/data/models/config_model.dart';
 import 'package:elnozom_pda/app/data/models/doc_item_model.dart';
 import 'package:elnozom_pda/app/data/models/item_model.dart';
+import 'package:elnozom_pda/app/utils/barcode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -42,6 +43,8 @@ class EditController extends GetxController{
     minorPerMajor : 0,
     pOSPP : 0,
     pOSTP : 0,
+    i : 0,
+    r : 0,
     byWeight : false,
     withExp : false,
     itemHasAntherUnit : false,
@@ -55,6 +58,8 @@ class EditController extends GetxController{
     minorPerMajor : 0,
     pOSPP : 0,
     pOSTP : 0,
+     i : 0,
+    r : 0,
     byWeight : false,
     withExp : false,
     itemHasAntherUnit : false,
@@ -110,6 +115,16 @@ class EditController extends GetxController{
       itemLoaded(context , item);
       _fieldFocusChange(context, itemFocus, wholeQntFocus);
   }
+
+  // scan barcode too open camera
+  
+  Future scanBarcode(context) async{
+    final barcode = BarCode.instance;
+    barcode.scanBarcode().then((value) {
+      codeController.text = value;
+      itemBCodeSubmitted(context, value);
+    });
+  }
   /// Only relevant for SimplePage at bottom
   void closeDoc() async {
     final Map req = {
@@ -119,7 +134,7 @@ class EditController extends GetxController{
     // print(req);
     var resp = await DocProvider().closeDoc(req);
 
-    Get.toNamed('/home');
+    Get.offAllNamed('/home');
   }
 
 
@@ -184,7 +199,24 @@ class EditController extends GetxController{
 
     return ;
   }
+  String? loadDate(){
+     return monthController.text != ""
+          ? '${monthController.text}/1/${yearController.text}'
+          : null;
+  }
 
+  int calculateQnt(bool byWeight ,int minor){
+    int qnt;
+    if (byWeight) {
+      qnt = int.parse(wholeQntController.text);
+    } else {
+      qntController.text = qntController.text == "" ? '0' : qntController.text;
+      qnt = int.parse(wholeQntController.text) * minor +
+      int.parse(qntController.text);
+
+    }
+    return qnt;
+  }
   void submit(context) async {
     formKey.currentState!.save();
     if (!formKey.currentState!.validate()) {
@@ -205,17 +237,7 @@ class EditController extends GetxController{
       // then check if the item is byweight to set qnt to the whole qnt value
       // if false then we make our calculation as (whole qnt * minor + part qnt)
       // ant then we have the qnt value which will bend send to the server
-      int qnt;
-      if (itemData.value.byWeight) {
-        qnt = int.parse(wholeQntController.text);
-      } else {
-        qntController.text = qntController.text == "" ? '0' : qntController.text;
-        int minor = itemData.value.minorPerMajor;
-        qnt = int.parse(wholeQntController.text) * minor +
-        int.parse(qntController.text);
-
-      }
-
+      int qnt = calculateQnt(itemData.value.byWeight , itemData.value.minorPerMajor);
       // CHECK IF qnt is 0 to show error
       if (qnt == 0) {
         qntErr.value = true;
@@ -224,10 +246,34 @@ class EditController extends GetxController{
       // if we reached  here that means we are loaded the qnt succesflly
       qntErr.value = false;
 
+      String? expD = loadDate();
+      print("config.partInv");
+      print(config.partInv);
+      print(config.partInv == true);
+      if(config.partInv == true){
+        final Map reaseedReq = {
+          "ItemSerial": itemData.value.serial,
+          "I": itemData.value.i,
+          "R": itemData.value.r,
+          "SessionNo": config.sessionNo,
+        };
+         var resp = await DocProvider().raseedInvInsert(reaseedReq);
+         if(resp['Diffrence'] == true){
+           Get.snackbar(
+            "تنبيه",
+            "لقد تم تغير مخزون هذا المنتج قبل اتمام حركة الجرد عليه",
+           );
+         }
+         if(resp['Inserted'] == false){
+           Get.snackbar(
+            "تنبيه",
+            " لقد تم اضافة هذا المنتج من قبل في نفس فترة الجرد",
+           );
+         }
+        
+
+      }
       // now we set the expDate string as we like to send it to the server
-      var expD = monthController.text != ""
-          ? '${monthController.text}/1/${yearController.text}'
-          : null;
       final Map req = {
         "DNo": config.docNo,
         "TrS": config.trSerial,

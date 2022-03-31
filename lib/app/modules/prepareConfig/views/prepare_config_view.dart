@@ -42,7 +42,6 @@ class PrepareConfigView extends GetView<PrepareConfigController> {
                                   name: 'bcode_emp',
                                   enabled: controller.emp.value.empCode == -1,
                                   autovalidateMode: AutovalidateMode.onUserInteraction,
-                                  autofocus: true,
                                   textInputAction: TextInputAction.next,
                                   focusNode: controller.empBCodeFocus,
                                   controller: controller.empBCode,
@@ -97,7 +96,23 @@ class PrepareConfigView extends GetView<PrepareConfigController> {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20.0),
+                          padding: const EdgeInsets.symmetric(vertical: 10.0),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 60,
+                            child: ElevatedButton(
+                              child: Text(
+                                "قراءة الباركود",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              onPressed: () {
+                                controller.scanBarcode(context);
+                              },
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10.0),
                           child: SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(

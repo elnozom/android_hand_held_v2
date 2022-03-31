@@ -4,6 +4,7 @@ import 'package:elnozom_pda/app/data/global_provider.dart';
 import 'package:elnozom_pda/app/data/models/acc_model.dart';
 import 'package:elnozom_pda/app/data/models/config_model.dart';
 import 'package:elnozom_pda/app/data/models/store_model.dart';
+import 'package:elnozom_pda/app/helpers/account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -17,7 +18,9 @@ class ConfigController extends GetxController with StateMixin<List<Store>> {
 
   //TODO: Implement ConfigController
   Config config = Get.arguments;
-  final formKey = GlobalKey<FormBuilderState>();
+  GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
+  final Account account = new Account();
+  FocusNode  accFocus = new FocusNode();
 
   //this is last character we loaded the data from the server for autocomplete input
   String? lastAccountSearchChar;
@@ -47,22 +50,25 @@ class ConfigController extends GetxController with StateMixin<List<Store>> {
   //create the new document after loading the data from the inputs
   void create() async {
     formKey.currentState!.save();
+    if (accBCode.text != "") {
+      accBCodeSubmitted(accBCode.text, true);
+    } else {
+      config.accSerial = account.accountSerial;
+      config.accName = account.accountName;
+      accBCode.text = account.accountCode!.toString();
+    }
     if (formKey.currentState!.validate()) {
       // print(accBCode.text);
       //check if we loaded the account from the server
-
-      if (accountSerial == null) {
-        if (accBCode.text != "") {
-          accBCodeSubmitted(accBCode.text, true);
-        }
+      if (config.trSerial == 102) {
+        Get.toNamed('/orders', arguments: config);
       } else {
-        config.accSerial = accountSerial;
+        Get.toNamed('/edit', arguments: config);
+      }
+      if (accountSerial == null) {
+      } else {
+       
         // that means if we are on sales order page
-        if (config.trSerial == 102) {
-          Get.toNamed('/orders', arguments: config);
-        } else {
-          Get.toNamed('/edit', arguments: config);
-        }
       }
     } else {
       print("validation failed");
@@ -163,6 +169,7 @@ class ConfigController extends GetxController with StateMixin<List<Store>> {
 
   void onInit() async {
     accBCode.text = "";
+    accountName = "";
     // Simulating obtaining the user name from some local storage
     super.onInit();
     change(null, status: RxStatus.success());
@@ -175,6 +182,7 @@ class ConfigController extends GetxController with StateMixin<List<Store>> {
 
   void onClose() {
     accBCode.clear();
+    accountName = "";
   }
 
   void onChanged(data) {

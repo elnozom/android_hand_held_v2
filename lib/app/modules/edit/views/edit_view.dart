@@ -1,11 +1,8 @@
 import 'package:elnozom_pda/app/controllers/global_controller.dart';
-import 'package:elnozom_pda/app/data/models/item_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:elnozom_pda/widgets/ProductsSearch.dart';
-
 import 'package:get/get.dart';
-
 import '../controllers/edit_controller.dart';
 
 class EditView extends GetView<EditController> {
@@ -17,7 +14,11 @@ class EditView extends GetView<EditController> {
   Widget build(BuildContext context) {
     return WillPopScope(
         onWillPop: () async {
-          await Get.offAllNamed('/home');
+          if (controller.config.partInv == true) {
+            controller.closeDoc();
+          } else {
+            await Get.offAllNamed('/home');
+          }
           return true;
         },
         child: Scaffold(
@@ -31,6 +32,10 @@ class EditView extends GetView<EditController> {
                     IconButton(
                       onPressed: () => {controller.closeDoc()},
                       icon: Text('غلق'),
+                    ),
+                    IconButton(
+                      onPressed: () => {controller.scanBarcode(context)},
+                      icon: Icon(Icons.camera),
                     )
                   ],
                   bottom: TabBar(
@@ -43,7 +48,7 @@ class EditView extends GetView<EditController> {
                   )),
               body: TabBarView(children: [
                 insert(context, controller),
-                 Obx(() {
+                Obx(() {
                   // return Text(controller.itemNotFound.value.toString());
                   if (controller.items.value == []) {
                     return Center(child: Text("الا يوجد اصناف"));
@@ -51,7 +56,6 @@ class EditView extends GetView<EditController> {
                     return viewItemsTable(controller.itemsList, controller);
                   }
                 }),
-                
               ])),
         )));
   }
@@ -59,7 +63,8 @@ class EditView extends GetView<EditController> {
 
 Widget viewItemsTable(List<dynamic> items, controller) {
   return SingleChildScrollView(
-          child: items.isNotEmpty ? Column(
+    child: items.isNotEmpty
+        ? Column(
             children: [
               DataTable(
                 columns: GlobalController().generateColumns(controller.columns),
@@ -70,8 +75,9 @@ Widget viewItemsTable(List<dynamic> items, controller) {
                 ],
               ),
             ],
-          ) : Center(child : Text("لا يوجد منتجات")),
-        );
+          )
+        : Center(child: Text("لا يوجد منتجات")),
+  );
 }
 
 Widget insert(context, controller) {
@@ -84,6 +90,7 @@ Widget insert(context, controller) {
               key: controller.formKey,
               autovalidateMode: AutovalidateMode.disabled,
               child: Column(children: <Widget>[
+                // Text(controller.config.partInv.toString()),
                 FormBuilderTextField(
                   name: 'bcode_item',
                   focusNode: controller.itemCodeFocus,
@@ -103,7 +110,7 @@ Widget insert(context, controller) {
                 Obx(() {
                   // return Text(controller.itemNotFound.value.toString());
                   if (controller.itemNotFound.value == true) {
-                    return Text('لا يوجد صنف بهئا الكود');
+                    return Text('لا يوجد صنف بهذا الكود');
                   } else {
                     return SizedBox(height: 0);
                   }
@@ -116,6 +123,9 @@ Widget insert(context, controller) {
                         Text(
                           '${controller.itemData.value.itemName}',
                         ),
+                        if (controller.config.trSerial == 31)
+                          Text(
+                              'الكمية:${(controller.itemData.value.r - controller.itemData.value.i).toString()}'),
                         Text(
                             'المحتوي:${controller.itemData.value.minorPerMajor.toString()}')
                       ],
@@ -124,7 +134,7 @@ Widget insert(context, controller) {
                     return SizedBox(height: 0);
                   }
                 }),
-                
+
                 Row(children: [
                   Expanded(
                     child: FormBuilderTextField(
@@ -142,10 +152,10 @@ Widget insert(context, controller) {
                       keyboardType: TextInputType.number,
                     ),
                   ),
-                  SizedBox(width:10),
+                  SizedBox(width: 10),
                   Obx(() {
                     if (controller.qntHidden.value == false) {
-                      return  Expanded(
+                      return Expanded(
                         child: FormBuilderTextField(
                           name: 'qnt',
                           focusNode: controller.qntFocus,
@@ -175,7 +185,8 @@ Widget insert(context, controller) {
                   }
                 }),
                 Obx(() {
-                  if (controller.withExp.value == true && controller.expExisted.value == false) {
+                  if (controller.withExp.value == true &&
+                      controller.expExisted.value == false) {
                     return Row(children: [
                       Expanded(
                         child: FormBuilderTextField(
@@ -216,19 +227,41 @@ Widget insert(context, controller) {
                 }),
                 // check if item has expiry and its not passed from the server to show the data inputs
                 Obx(() {
-                  if(controller.searchHidden.value == false){
+                  if (controller.searchHidden.value == false) {
                     return Column(
                       children: [
-                        getProductsSearch(context , controller),
-                        TextButton(child: Text("اخفاء حقل البحث عن المنتج") , onPressed: () => controller.searchHidden.value = true),
+                        getProductsSearch(context, controller),
+                        TextButton(
+                            child: Text("اخفاء حقل البحث عن المنتج"),
+                            onPressed: () =>
+                                controller.searchHidden.value = true),
                       ],
                     );
                   } else {
-                    return TextButton(child: Text("اظهار حقل البحث عن المنتج") , onPressed: () => controller.searchHidden.value = false);
+                    return TextButton(
+                        child: Text("اظهار حقل البحث عن المنتج"),
+                        onPressed: () => controller.searchHidden.value = false);
                   }
                 }),
+               
+                 Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 60,
+                    child: ElevatedButton(
+                      child: Text(
+                        "قراءة البار كود",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      onPressed: () {
+                       controller.scanBarcode(context);
+                      },
+                    ),
+                  ),
+                ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20.0),
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

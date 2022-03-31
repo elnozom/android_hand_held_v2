@@ -13,6 +13,9 @@ dependencies:
   flutter_form_builder: ^6.0.1
   shared_preferences: ^2.0.6
   simple_autocomplete_formfield: ^0.3.0
+  # imei_plugin: ^1.2.0
+  flutter_splash_screen: ^0.3.0
+  flutter_barcode_scanner: ^2.0.0
 
 dev_dependencies: 
   flutter_lints: ^1.0.0
@@ -24,6 +27,8 @@ flutter:
 
   assets:
     - assets/images/home-bg.png
+    - assets/images/lock.png
+    - assets/images/sad.png
     - assets/images/logo.png
 
   fonts:

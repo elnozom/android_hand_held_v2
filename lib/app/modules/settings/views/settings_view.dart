@@ -11,11 +11,11 @@ class SettingsView extends GetView<SettingsController> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-       onWillPop: () async {
-          await Get.offAllNamed('/home');
-          return true;
-        },
-          child: Scaffold(
+      onWillPop: () async {
+        await Get.offAllNamed('/home');
+        return true;
+      },
+      child: Scaffold(
           appBar: AppBar(
             title: Text('الاعدادات'),
             centerTitle: true,
@@ -23,64 +23,86 @@ class SettingsView extends GetView<SettingsController> {
           body: controller.obx(
             (state) => SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: FormBuilder(
-                  key: controller.formKey,
-                  autovalidateMode: AutovalidateMode.disabled,
-                  child: Column(children: [
-                    FormBuilderDropdown<int>(
-                      name: 'store',
-                      decoration: InputDecoration(
-                        labelText: 'اختر المخزن',
-                      ),
-                      // initialValue: 'Male',
-                      allowClear: true,
-                      hint: Text('اختر المخزن'),
-                      onChanged: controller.storeChanged,
-                      initialValue: controller.selectedOption,
-                      items: controller.storesDropdownItems,
-                    ),
-                    FormBuilderTextField(
-                      name: 'device',
-                      controller: controller.deviceController,
-                      decoration: InputDecoration(
-                        labelText: 'ادخل رقم الجهاز',
-                      ),
-                      textInputAction: TextInputAction.next,
-                      // valueTransformer: (text) => num.tryParse(text),
-                      validator: FormBuilderValidators.compose(
-                          GlobalController().loadDeviceValidators(context)),
-                      keyboardType: TextInputType.number,
-                    ),
-                    FormBuilderTextField(
-                      name: 'server',
-                      controller: controller.serverController,
-                      decoration: InputDecoration(
-                        labelText: 'ادخل عنوان الخادم',
-                      ),
-                      textInputAction: TextInputAction.next,
-                      // valueTransformer: (text) => num.tryParse(text),
-                      validator: FormBuilderValidators.compose(
-                          GlobalController().loadServerValidators(context)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          child: Text(
-                            "حفظ",
-                            style: TextStyle(color: Colors.white),
+                  padding: const EdgeInsets.all(8.0),
+                  child: controller.isAuthorized
+                      ? FormBuilder(
+                          key: controller.formKey,
+                          autovalidateMode: AutovalidateMode.disabled,
+                          child: Column(children: [
+                            FormBuilderDropdown<int>(
+                              name: 'store',
+                              decoration: InputDecoration(
+                                labelText: 'اختر المخزن',
+                              ),
+                              // initialValue: 'Male',
+                              allowClear: true,
+                              hint: Text('اختر المخزن'),
+                              onChanged: controller.storeChanged,
+                              initialValue: controller.selectedOption,
+                              items: controller.storesDropdownItems,
+                            ),
+                            FormBuilderTextField(
+                              name: 'server',
+                              controller: controller.serverController,
+                              decoration: InputDecoration(
+                                labelText: 'ادخل عنوان الخادم',
+                              ),
+                              textInputAction: TextInputAction.next,
+                              // valueTransformer: (text) => num.tryParse(text),
+                              validator: FormBuilderValidators.compose(
+                                  GlobalController()
+                                      .loadServerValidators(context)),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 20.0),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  child: Text(
+                                    "حفظ",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  onPressed: () {
+                                    controller.submit();
+                                  },
+                                ),
+                              ),
+                            ),
+                          ]),
+                        )
+                      : Column(children: [
+                          FormBuilderTextField(
+                            obscureText:true,
+                            name: 'password',
+                            controller: controller.passwordController,
+                            decoration: InputDecoration(
+                              labelText: 'ادخل كلمة السر',
+                            ),
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (value) => controller.authorize(),
+                            // valueTransformer: (text) => num.tryParse(text),
+                            validator: FormBuilderValidators.compose(
+                                GlobalController()
+                                    .loadServerValidators(context)),
                           ),
-                          onPressed: () {
-                            controller.submit();
-                          },
-                        ),
-                      ),
-                    ),
-                  ]),
-                ),
-              ),
+                          controller.wrongPassword ? Text("كلمة سر غير صحيحة") : SizedBox(height: 0),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20.0),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                child: Text(
+                                  "تاكيد",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                onPressed: () {
+                                  controller.authorize();
+                                },
+                              ),
+                            ),
+                          ),
+                        ])),
             ),
           )),
     );

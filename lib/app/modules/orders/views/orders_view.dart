@@ -24,7 +24,7 @@ class OrdersView extends GetView<OrdersController> {
           length: myTabs.length,
           child: Scaffold(
               appBar: AppBar(
-                  title: Text('تعديل المستند'),
+                  title: controller.config.accName  != null ? Text(controller.config.accName!) : Text("تعديل المستند"),
                   centerTitle: false,
                   actions: [
                     IconButton(
@@ -67,6 +67,18 @@ Widget viewItemsTable(List<OrderItem> items, controller) {
               controller.generateRows(items[i]),
           ],
         ),
+        Divider(),
+        Obx(() {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            // crossAxisAlignment: CrossAxisAlignment.spaceAround,
+            children: [
+              Text("الاجمالي : "),
+              Text("${controller.totals.value.totalCash}EGP")
+            ],
+          );
+        })
+        
       ],
     ),
   );
