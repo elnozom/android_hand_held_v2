@@ -194,7 +194,6 @@ class Products {
   void itemBCodeSubmitted(context) {
     final Map req = {"BCode": barCodeController.text};
     docProvider.getItem(req).then((item) {
-     print(item);
      if(item == null) return;
       nameController.text = item.itemName;
       minorController.text = item.minorPerMajor.toString();
@@ -258,7 +257,7 @@ class Products {
                   decoration: InputDecoration(
                     labelText: ' كود المنتج',
                   ),
-                  onChanged: (data) => {itemBCodeSubmitted(context)},
+                 
                   validator: FormBuilderValidators.compose([
                     FormBuilderValidators.required(context,
                         errorText: "كود المنتج مطلوب"),
@@ -276,6 +275,7 @@ class Products {
             controller: barCodeController,
             // valueTransformer: (data) => {int.parse(data)},
             textInputAction: TextInputAction.next,
+            
             decoration: InputDecoration(
               labelText: ' بار كود المنتج',
             ),
@@ -289,6 +289,8 @@ class Products {
               if (data == "") {
                 barCodeController.text =
                     "${groupCodeController.text}${itemCodeController.text}";
+              } else {
+                itemBCodeSubmitted(context);
               }
               barCodeFocus.unfocus();
               FocusScope.of(context).requestFocus(nameFocus);
